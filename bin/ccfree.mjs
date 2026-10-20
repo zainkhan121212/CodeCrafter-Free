@@ -12,6 +12,10 @@ import { readProgress, updateProgress, projectProgress, markCompleted, resetProj
 import { Logger } from '../lib/harness/logger.mjs';
 import { runStages } from '../lib/harness/runner.mjs';
 
+// node:sqlite (used by the SQLite tester) prints an ExperimentalWarning on some Node versions.
+process.removeAllListeners('warning');
+process.on('warning', w => { if (w.name !== 'ExperimentalWarning') console.warn(w.stack || String(w)); });
+
 const argv = process.argv.slice(2);
 const command = argv[0] && !argv[0].startsWith('-') ? argv.shift() : 'help';
 const flags = {};
