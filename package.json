@@ -1,0 +1,15 @@
+{
+  "name": "codecrafter-free",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free, independent systems programming labs and a local test runner.",
+  "engines": { "node": ">=22" },
+  "bin": { "ccfree": "./bin/ccfree.mjs" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "license": "MIT"
+}
