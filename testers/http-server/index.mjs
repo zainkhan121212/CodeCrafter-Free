@@ -2,7 +2,7 @@
 import { gunzipSync } from 'node:zlib';
 import { writeFile, readFile } from 'node:fs/promises';
 import { join, sep } from 'node:path';
-import { TcpConn } from '../../lib/harness/net.mjs';
+import { TcpConn, ensurePortFree } from '../../lib/harness/net.mjs';
 import { TestFailure } from '../../lib/harness/runner.mjs';
 import { parseResponse, buildRequest } from '../../lib/protocols/http.mjs';
 import { word, words, randInt, pick } from '../../lib/harness/random.mjs';
@@ -203,3 +203,5 @@ export const stages = {
     t.log.success('✓ Connection was closed by the server');
   },
 };
+
+export const beforeStage = () => ensurePortFree(PORT);

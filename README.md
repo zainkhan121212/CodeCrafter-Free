@@ -10,7 +10,7 @@ dashboard.
 - **No account, no subscription, no limits.** Progress is saved on your computer.
 - **11 courses, 412 stages**, with the same stage lists as the CodeCrafters catalog (see [content/UPSTREAM.md](content/UPSTREAM.md)).
 - **20+ languages.** Every course comes with starter code for Python, JavaScript, TypeScript, Go, Rust, C, C++, Java, C#, … .
-- **Works on Windows, macOS and Linux.** The testers are written from scratch in Node.js, so they run natively on Windows.
+- **Works on Windows, macOS and Linux.** The testers are written from scratch in Node.js and run natively on Windows (see platform notes).
 
 | Course | Stages | You build |
 | --- | --- | --- |
@@ -26,22 +26,40 @@ dashboard.
 | Kafka | 25 | A Kafka broker: ApiVersions, DescribeTopicPartitions, Fetch, Produce |
 | Claude Code | 13 | An AI coding agent: tool calls, agent loop, skills |
 
-## Tester status
+## How the tests work
 
-The curriculum (every stage's instructions and starters) is complete. Testers are being written course by course;
-stages without a tester yet are marked **"tester coming soon"** in the dashboard and in `ccfree stages`, and they never
-pass silently.
+**Every one of the 412 stages has a tester.** Everything runs locally and offline:
 
-| Course | Stages with a tester |
+| Course | What the tester does |
 | --- | --- |
-| Redis | 18 / 124 (base stages and Lists) |
-| Others | in progress |
+| Redis | Talks RESP over TCP like `redis-cli`; for replication it plays the master, the replicas and the clients; writes RDB/AOF files |
+| HTTP Server | Sends raw HTTP/1.1 requests; checks headers, bodies, gzip, keep-alive and `Connection: close` |
+| Shell | Types into your shell through a pseudo-terminal and reads the screen (TAB completion, bell, history, jobs) |
+| grep | Runs your grep with `-E` patterns on stdin, files and directories; checks exit codes, `-o` and `--color` output |
+| Interpreter | Compares your `tokenize`/`parse`/`evaluate`/`run` output and exit codes with a jlox-compatible reference |
+| Git | Uses the real `git` to check your objects; clones from a local smart-HTTP server (with delta objects) |
+| SQLite | Generates random databases with the real SQLite engine; the index stage uses a ~1 GB database (built once, cached) |
+| BitTorrent | Starts a local tracker and seeder peers (BEP 3, 9, 10) and checks the files you download |
+| DNS Server | Sends DNS queries over UDP, including compressed names; runs a fake upstream resolver for forwarding |
+| Kafka | Speaks the Kafka wire protocol; writes cluster metadata and partition logs as real RecordBatches |
+| Claude Code | Points `OPENROUTER_BASE_URL` at a scripted mock LLM, so no API key is needed and runs are deterministic |
 
-Every tester is verified in CI against a reference solution (which must pass) and a do-nothing program (which must fail).
+Inputs are randomized, so answers can't be hard-coded. Every tester is verified (`npm test`) against a reference
+solution, which must pass, and a program that does nothing, which must fail. The Lox reference matches 238 of the 240
+programs in the official *Crafting Interpreters* test suite.
+
+### Platform notes
+
+- **Windows:** everything runs natively except 49 Shell stages that need POSIX tools (`cat`, `ls`, executable scripts) or a
+  pseudo-terminal (TAB completion, arrow keys). Run those in WSL ("WSL: Reopen Folder in WSL" in VS Code, install Node
+  there) — the tester tells you when that's needed. The `--color=auto` grep stage checks its terminal half on Linux/macOS only.
+- **Linux/macOS:** everything runs. The pseudo-terminal uses `python3`, which is preinstalled on most systems.
+- Compiled languages (Go, Rust, C, C++, Java, …) build through the starter's `.ccfree/*.sh` scripts, which need `sh`
+  (on Windows: Git Bash, installed with Git).
 
 ## Install
 
-You need [Node.js](https://nodejs.org) 20 or newer and [Git](https://git-scm.com).
+You need [Node.js](https://nodejs.org) 22.13 or newer and [Git](https://git-scm.com).
 
 ```sh
 git clone https://github.com/zainkhan121212/CodeCrafter-Free.git
@@ -131,13 +149,11 @@ content/courses/        imported stage descriptions and starter code
 tests/                  platform tests: `npm test`
 ```
 
-## Contributing a tester
+## Contributing
 
-1. Read the stage description in `content/courses/<course>/course.json` (or the dashboard).
-2. Add a function for the stage slug in `testers/<course>/`. Use `t.spawn()` / `t.exec()` to run the learner's program and
-   `t.fail()` / `t.assertEqual()` to check behavior. Randomize inputs so answers cannot be hard-coded.
-3. Extend `solutions/<course>/main.mjs` so the reference solution passes.
-4. Run `CCFREE_COURSES=<course> npm test`. The suite checks that the reference passes *and* that a do-nothing program fails.
+Testers live in `testers/<course>/` (one async function per stage slug) and reference solutions in
+`solutions/<course>/main.mjs`. After changing either, run `CCFREE_COURSES=<course> npm test`; it checks that the reference
+passes every stage and that a do-nothing program fails every stage. `CCFREE_STAGES=slug1,slug2` narrows it further.
 
 ## Credits and license
 

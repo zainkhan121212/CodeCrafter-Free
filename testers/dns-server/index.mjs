@@ -1,6 +1,6 @@
 // DNS server tester: sends DNS queries over UDP to port 2053 and checks the replies.
 import dgram from 'node:dgram';
-import { UdpClient } from '../../lib/harness/net.mjs';
+import { UdpClient, ensurePortFree } from '../../lib/harness/net.mjs';
 import { TestFailure } from '../../lib/harness/runner.mjs';
 import { buildQuery, buildResponse, parseMessage } from '../../lib/protocols/dns.mjs';
 import { word, randInt, pick, shuffle } from '../../lib/harness/random.mjs';
@@ -163,3 +163,5 @@ export const stages = {
     checkAnswers(t, reply2, names, names.map(n => ips.get(n)));
   },
 };
+
+export const beforeStage = () => ensurePortFree(PORT, { udp: true });

@@ -109,7 +109,7 @@ async function courseView(slug) {
       <div>
         <h1><span class="glyph">${esc(GLYPHS[slug])}</span>${esc(course.title)}</h1>
         <div class="prose">${md(course.description)}</div>
-        <div class="pills" style="margin-top:14px"><span class="pill">${stages.length} stages</span><span class="pill">${course.extensions.length} extensions</span><span class="pill">${course.tested.length}/${stages.length} stages testable today</span></div>
+        <div class="pills" style="margin-top:14px"><span class="pill">${stages.length} stages</span><span class="pill">${course.extensions.length} extensions</span><span class="pill">${course.tested.length === stages.length ? 'Every stage has a tester' : `${course.tested.length}/${stages.length} stages have a tester`}</span></div>
       </div>
       <aside>
         <div class="panel">

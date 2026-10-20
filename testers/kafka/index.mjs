@@ -3,7 +3,7 @@
 // and the broker is started with a server.properties file whose log.dirs points there.
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { TcpConn } from '../../lib/harness/net.mjs';
+import { TcpConn, ensurePortFree } from '../../lib/harness/net.mjs';
 import { TestFailure } from '../../lib/harness/runner.mjs';
 import {
   Reader, KafkaDecodeError, apiVersionsRequest, describeTopicPartitionsRequest, fetchRequest, produceRequest,
@@ -332,3 +332,5 @@ export const stages = {
   async ct4(t) { await produceStage(t, [[2, 1]]); },
   async ov0(t) { await produceStage(t, [[2, 1], [2, 1]]); },
 };
+
+export const beforeStage = () => ensurePortFree(PORT);

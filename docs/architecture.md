@@ -37,6 +37,19 @@ There is no server-side execution and no account system.
   progress, and streams run events with Server-Sent Events. It rejects non-loopback `Host` headers and non-GET requests.
 - **Desktop** (`desktop/`): an Electron window around the same server.
 
+## Notable testers
+
+- **Shell** runs the learner's shell in a pseudo-terminal (Python's `pty` on Linux/macOS) and keeps a small VT100 screen
+  model (`lib/harness/terminal.mjs`), so TAB completion, the bell, match lists and arrow-key history are asserted on what a
+  user would actually see.
+- **Claude Code** sets `OPENROUTER_BASE_URL` to a scripted, OpenAI-compatible mock model (`testers/claude-code/mock-llm.mjs`)
+  that reads the request like a model would (advertised tools, system prompt, tool results).
+- **BitTorrent** runs a local tracker and seeder peers; **Git** serves clones through `git upload-pack`; **DNS** runs a fake
+  upstream resolver; **Redis replication** plays master, replicas and clients.
+- **Interpreter** compares against `lib/protocols/lox.mjs`, a jlox-compatible implementation checked against the official
+  *Crafting Interpreters* test suite.
+- Testers with fixed ports (Redis 6379, HTTP 4221, DNS 2053/udp, Kafka 9092) check the port is free first (`beforeStage`).
+
 ## Verification
 
 `npm test` runs platform tests (catalog, CLI, RESP, dashboard boundaries) and, for every course with a reference solution
