@@ -1,15 +1,40 @@
 {
   "name": "codecrafter-free",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Build your own Redis, Git, SQLite, HTTP server and more from scratch. Free, local, no account.",
   "type": "module",
-  "description": "Free, independent systems programming labs and a local test runner.",
-  "engines": { "node": ">=22" },
-  "bin": { "ccfree": "./bin/ccfree.mjs" },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "ccfree": "bin/ccfree.mjs"
+  },
   "scripts": {
-    "start": "node server.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "build": "node scripts/build.mjs"
+    "start": "node bin/ccfree.mjs app",
+    "app": "node bin/ccfree.mjs app",
+    "desktop": "npm --prefix desktop install && npm --prefix desktop start",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "import-upstream": "node scripts/import-upstream.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "app",
+    "testers",
+    "content",
+    "server.mjs"
+  ],
+  "keywords": [
+    "codecrafters",
+    "build-your-own-x",
+    "redis",
+    "git",
+    "sqlite",
+    "learning"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zainkhan121212/CodeCrafter-Free.git"
   },
   "license": "MIT"
 }

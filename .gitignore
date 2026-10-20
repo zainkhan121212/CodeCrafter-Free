@@ -5,4 +5,5 @@ playground/
 *.log
 .env*
 !.env.example
-.openai/*.local.*
+desktop/node_modules/
+desktop/out/

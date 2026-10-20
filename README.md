@@ -1,82 +1,150 @@
 # CodeCrafter Free
 
-An independent, free systems-programming workbench. **This is a foundation release, not full CodeCrafters feature parity.** It has 11 challenge families and 55 original, executable component-level stages. No subscription or run limits.
+**Build your own Redis, Git, SQLite, HTTP server, shell, interpreter and more — from scratch. Free, forever.**
 
-## Run locally
+CodeCrafter Free is an open-source, local-first take on "build your own X" challenges. Pick a system, write the code in your
+own editor (VS Code works great), and run `ccfree test` in the terminal. The tester starts *your* program and talks to it
+the way a real client would — over TCP, UDP, files and command-line arguments — and the results stream live into a desktop
+dashboard.
 
-Requires Node.js 22+ and Git. There are no external npm dependencies.
+- **No account, no subscription, no limits.** Progress is saved on your computer.
+- **11 courses, 412 stages**, with the same stage lists as the CodeCrafters catalog (see [content/UPSTREAM.md](content/UPSTREAM.md)).
+- **20+ languages.** Every course comes with starter code for Python, JavaScript, TypeScript, Go, Rust, C, C++, Java, C#, … .
+- **Works on Windows, macOS and Linux.** The testers are written from scratch in Node.js, so they run natively on Windows.
+
+| Course | Stages | You build |
+| --- | --- | --- |
+| Redis | 124 | A Redis server: RESP, expiry, lists, streams, transactions, replication, RDB/AOF persistence, pub/sub, sorted sets, geo, auth |
+| HTTP Server | 14 | An HTTP/1.1 server: routing, headers, files, concurrency, gzip, persistent connections |
+| Shell | 76 | A POSIX shell: REPL, builtins, quoting, redirection, pipelines, completion, history, jobs |
+| grep | 33 | A regex engine: character classes, anchors, quantifiers, alternation, backreferences |
+| Interpreter | 84 | A Lox interpreter: scanner, parser, evaluator, functions, closures, classes |
+| Git | 7 | Git internals: objects, trees, commits, and cloning over the smart HTTP protocol |
+| SQLite | 9 | A SQLite file reader: pages, B-trees, schemas, SELECT/WHERE, index scans |
+| BitTorrent | 19 | A BitTorrent client: bencode, trackers, peer wire protocol, magnet links |
+| DNS Server | 8 | A DNS server: wire format, compression, forwarding |
+| Kafka | 25 | A Kafka broker: ApiVersions, DescribeTopicPartitions, Fetch, Produce |
+| Claude Code | 13 | An AI coding agent: tool calls, agent loop, skills |
+
+## Tester status
+
+The curriculum (every stage's instructions and starters) is complete. Testers are being written course by course;
+stages without a tester yet are marked **"tester coming soon"** in the dashboard and in `ccfree stages`, and they never
+pass silently.
+
+| Course | Stages with a tester |
+| --- | --- |
+| Redis | 18 / 124 (base stages and Lists) |
+| Others | in progress |
+
+Every tester is verified in CI against a reference solution (which must pass) and a do-nothing program (which must fail).
+
+## Install
+
+You need [Node.js](https://nodejs.org) 20 or newer and [Git](https://git-scm.com).
 
 ```sh
 git clone https://github.com/zainkhan121212/CodeCrafter-Free.git
 cd CodeCrafter-Free
-node server.mjs
+npm link            # makes the `ccfree` command available in every terminal
 ```
 
-Open **http://127.0.0.1:4317**. The repository and hosted preview are initially private.
+No other dependencies are needed. (If `npm link` is not an option, use `node /path/to/CodeCrafter-Free/bin/ccfree.mjs`
+wherever this README says `ccfree`.)
 
-In another terminal, from the platform directory:
+### Open the dashboard
 
 ```sh
-node bin/ccfree.mjs list
-node bin/ccfree.mjs init redis my-redis
-cd my-redis
-code .
-node ../bin/ccfree.mjs test --stage ping
+ccfree app          # opens the dashboard in your browser
+npm run desktop     # or: open it as a desktop app (downloads Electron the first time)
 ```
 
-Implement `solve(request)` in the generated starter. The initial stub intentionally fails. Each test starts a fresh process, sends a JSON value on stdin and expects exactly one JSON value on stdout. Debug output goes on stderr.
+## Your first stage
 
-For Redis's first stage, for example, input `{"commands":[["PING"]]}` expects `["PONG"]`. The next stages add echo, state, deletion and RESP encoding. These are foundation components, not a complete Redis server.
+```sh
+ccfree init redis my-redis --language python
+cd my-redis
+code .              # open in VS Code
+ccfree show         # read the stage instructions
+ccfree test         # run the tests
+```
 
-VS Code: **Tasks: Run Test Task** uses the generated `.vscode/tasks.json`. The task contains the platform's absolute location; regenerate it or update the path if you move the platform.
+When a stage passes, ccfree moves you to the next one. In VS Code you can also run **Tasks: Run Test Task**
+(`Ctrl+Shift+P`), which `ccfree init` sets up for you.
 
-Python starter: append `--language python` to `init`. Python must be installed. Any compiled or interpreted language can be used by changing `command` in `ccfree.json`:
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `ccfree courses` | List courses and your progress |
+| `ccfree init <course> [dir] --language <lang>` | Create a project from a starter |
+| `ccfree test` | Test the current stage; advance when it passes |
+| `ccfree test --previous` | Re-test every stage up to the current one |
+| `ccfree test --stage <slug>` | Test one specific stage (any order) |
+| `ccfree test --all` | Test every stage |
+| `ccfree show [stage]` | Print stage instructions in the terminal |
+| `ccfree status` / `ccfree stages` | Current stage / full stage list |
+| `ccfree app` | Open the dashboard (live logs, instructions, progress) |
+| `ccfree doctor` | Show which language runtimes are installed |
+| `ccfree reset` | Clear progress for the current project |
+
+Add `--debug` to `ccfree test` for extra tester output.
+
+## How your program is run
+
+`ccfree init` writes a `ccfree.json` into your project:
 
 ```json
 {
-  "challenge": "redis",
-  "command": ["node", "main.mjs"],
-  "timeout": 3000
+  "course": "redis",
+  "language": "python",
+  "build": null,
+  "run": ["python", "-u", "-m", "app.main"]
 }
 ```
 
-Use an executable plus argument array, not a shell command. Compile Go/Rust/C/C++ solutions separately and point `command` to the binary. PowerShell can use `["pwsh", "-File", "main.ps1"]`. Custom language runtimes have not all been tested.
+- `build` (optional) runs once before the tests, e.g. `["sh", ".ccfree/compile.sh"]` for Go/Rust/C/Java.
+- `run` is started for every test instance, with stage-specific arguments appended.
+- Optional `"extensions": ["lists", "streams"]` limits and orders which extensions you work through.
 
-## Working features
+JavaScript, TypeScript and Python run directly. Compiled languages use the starter's `.ccfree/compile.sh` and
+`.ccfree/run.sh`, which need `sh`/`bash` — on Windows that means Git Bash (installed with Git) or WSL. You can always edit
+`ccfree.json` to use any command you like.
 
-- Original stages, hints, examples and primary-specification links.
-- Redis, HTTP, Git, SQLite, Shell, grep, Interpreter, BitTorrent, DNS, Kafka, and AI Coding Agent.
-- Real subprocess tests, edge cases, stage selection, structured failure reports, nonzero failure exit codes.
-- JavaScript/Python scaffolding and VS Code tasks.
-- Searchable responsive catalog, lessons, report inspection and progress.
-- Automatic local report sync; import/export for the static hosted dashboard.
-- No dependencies, billing, analytics or external model calls.
+## Where data is stored
 
-Reports are written to the student's `ccfree-report.json` and the platform's ignored `.data/reports/` directory. The browser retains its latest 100 reports in local storage. Reports are self-reported learning records, not trusted certificates. Use export for backups.
+Everything is local, in `~/.ccfree` (override with the `CCFREE_HOME` environment variable):
+`progress.json` (completed stages per project) and `runs/` (logs of every test run). Delete it to start over.
 
-## Explicit limits
+## Project layout
 
-The 55 stages implement protocol and storage **components through a JSON driver**. They do not constitute complete systems or reproduce the paid curriculum. They currently do not launch TCP/UDP servers or compile submissions.
-
-Not implemented: authenticated accounts, cloud progress, remote execution workers, Git-push grading, advanced curriculum, public discussions or shared solutions. See [research](docs/research.md) and [architecture](docs/architecture.md).
-
-The local runner executes **your own code** with your OS permissions. Time and output limits improve feedback, but this is not an isolation boundary. It does not guarantee cleanup of descendant processes. Do not expose it as a remote judge. The HTTP server binds only to loopback and offers no execution endpoint.
-
-Static hosting serves the learning dashboard; it cannot execute local programs. Import a report after running tests locally. Hosting and operating arbitrary-code workers would require separate infrastructure and funding.
-
-## Verify and build
-
-```sh
-node --test tests/platform.test.mjs
-node scripts/build.mjs
+```
+bin/ccfree.mjs          CLI
+server.mjs              local dashboard server (read-only, loopback only)
+app/                    dashboard frontend
+desktop/                optional Electron wrapper
+lib/harness/            process launcher, logger, TCP/UDP helpers, stage runner
+lib/protocols/          protocol codecs shared by testers (RESP, …)
+testers/<course>/       the testers — one function per stage
+solutions/<course>/     reference solutions used to verify the testers (spoilers!)
+content/courses/        imported stage descriptions and starter code
+tests/                  platform tests: `npm test`
 ```
 
-Tests independently evaluate all curriculum fixtures, run reference implementations through all 11 subprocess suites, and check timeout, output limits, malformed output, unknown stages, report validation and HTTP boundaries. Visible reference solutions live in `tests/reference.mjs`; they validate the platform, not hidden grading.
+## Contributing a tester
 
-`dist/` is the static dashboard. Deployment configuration is in `.openai/hosting.json`; use a separate Site identity for forks.
+1. Read the stage description in `content/courses/<course>/course.json` (or the dashboard).
+2. Add a function for the stage slug in `testers/<course>/`. Use `t.spawn()` / `t.exec()` to run the learner's program and
+   `t.fail()` / `t.assertEqual()` to check behavior. Randomize inputs so answers cannot be hard-coded.
+3. Extend `solutions/<course>/main.mjs` so the reference solution passes.
+4. Run `CCFREE_COURSES=<course> npm test`. The suite checks that the reference passes *and* that a do-nothing program fails.
 
-## Research and independence
+## Credits and license
 
-[Detailed REA and CodeCrafters research](docs/research.md) pins the inspected REA commit and distinguishes source findings, public documentation, proposals and unknowns.
+Stage descriptions and starter code come from the open-source
+[CodeCrafters course repositories](https://github.com/codecrafters-io) (MIT License); see
+[content/UPSTREAM.md](content/UPSTREAM.md) for exact sources. The testers, CLI, dashboard and everything else are original
+to this project. CodeCrafter Free is independent and is not affiliated with or endorsed by CodeCrafters. If you can, support
+the people who made the original curriculum.
 
-CodeCrafter Free is not affiliated with or endorsed by CodeCrafters. No proprietary course content, paid tests, site assets or REA code are included. Product and technology names identify educational subjects. MIT license applies to this project's original source.
+MIT License — see [LICENSE](LICENSE).

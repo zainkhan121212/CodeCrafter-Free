@@ -1,0 +1,51 @@
+import Foundation
+
+@main
+struct Main {
+
+    static func main() async throws {
+        guard CommandLine.argc == 3 else {
+            print("Usage: ./your_program.sh <database path> <command>")
+            return
+        }
+
+        let path = CommandLine.arguments[1]
+        let command = CommandLine.arguments[2]
+
+        // Read database file as byte array.
+        let database = try Data(contentsOf: URL(fileURLWithPath: path))
+
+        // Parse command and perform required actions.
+        switch command {
+        case ".dbinfo":
+            // You can use print statements as follows for debugging, they'll be visible when running tests.
+            eprintln("Logs from your program will appear here!")
+
+            // TODO: Uncomment the code below to pass the first stage
+            // let pageSize = UInt16(database[16..<18])
+            // print("database page size: \(pageSize)")
+        default:
+            fatalError("Invalid command \(command)")
+        }
+    }
+}
+
+// Allows constructing UInt16, UInt32, etc. from a byte array.
+extension UnsignedInteger {
+
+    init<T: Collection>(_ bytes: T) where T.Element == UInt8 {
+        precondition(
+            bytes.count <= MemoryLayout<Self>.size,
+            "bytes count: \(bytes.count), layout: \(MemoryLayout<Self>.size)"
+        )
+
+        var value = UInt64()
+
+        for byte in bytes {
+            value <<= 8
+            value |= UInt64(byte)
+        }
+
+        self.init(value)
+    }
+}

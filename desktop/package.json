@@ -1,0 +1,15 @@
+{
+  "name": "codecrafter-free-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop window for the CodeCrafter Free dashboard",
+  "main": "main.cjs",
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "33.2.1"
+  },
+  "license": "MIT"
+}

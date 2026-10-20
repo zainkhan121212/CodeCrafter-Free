@@ -1,0 +1,16 @@
+{
+    "name": "@codecrafters/build-your-own-sqlite",
+    "version": "1.0.0",
+    "description": "Build your own SQLite challenge, from CodeCrafters",
+    "main": "main.js",
+    "type": "module",
+    "scripts": {
+        "dev": "node app/main.js"
+    },
+    "keywords": [
+        "build-your-own-x"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {}
+}

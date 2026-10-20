@@ -1,0 +1,157 @@
+{
+ "slug": "http-server",
+ "name": "HTTP server",
+ "title": "Build your own HTTP server",
+ "shortDescription": "Learn about TCP servers, the HTTP protocol and more",
+ "description": "HTTP is the protocol that powers the web. In this challenge, you'll build a HTTP server from scratch using TCP primitives. Your server will be capable of handling simple GET/POST requests, serving files and handling multiple concurrent connections.\n\nAlong the way, we'll learn about TCP connections, HTTP headers, HTTP verbs, handling multiple connections and more.",
+ "releaseStatus": "live",
+ "languages": [
+  "c",
+  "clojure",
+  "cpp",
+  "csharp",
+  "dart",
+  "elixir",
+  "gleam",
+  "go",
+  "haskell",
+  "java",
+  "javascript",
+  "kotlin",
+  "ocaml",
+  "odin",
+  "php",
+  "python",
+  "ruby",
+  "rust",
+  "scala",
+  "typescript",
+  "zig"
+ ],
+ "extensions": [
+  {
+   "slug": "http-compression",
+   "name": "HTTP Compression",
+   "description": "In this challenge extension you'll add [compression][http-compression] support to your HTTP server implementation.\n\nAlong the way you'll learn about compression, compression scheme negotiation and more.\n\n[http-compression]: https://en.wikipedia.org/wiki/HTTP_compression"
+  },
+  {
+   "slug": "http-persistent-connections",
+   "name": "Persistent Connections",
+   "description": "In this challenge extension you'll add [persistent connections][http-persistent-connections] support to your HTTP server implementation.\n\nAlong the way you'll learn about persistent connections, the `Connection` header and more.\n\n[http-persistent-connections]: https://en.wikipedia.org/wiki/HTTP_persistent_connection"
+  }
+ ],
+ "stages": [
+  {
+   "slug": "at4",
+   "name": "Bind to a port",
+   "difficulty": "very_easy",
+   "extension": null,
+   "marketing": "In this stage, you'll build a TCP server that listens on port 4221.",
+   "description": "HTTP servers communicate over TCP, the protocol that powers most web traffic. In this stage, you’ll implement a TCP server that listens on port 4221, just like a real HTTP server.\n\n<!--\n### Tests\n\nThe tester will execute your program like this:\n\n```\n$ ./your_program.sh\n```\n\nThen, the tester will try to connect to your server on port 4221. The connection must succeed for you to pass this stage.\n\n### Notes\n\n- To learn how HTTP works, you'll implement your server from scratch using TCP primitives, without relying on built-in or external HTTP libraries.\n-->"
+  },
+  {
+   "slug": "ia4",
+   "name": "Respond with 200",
+   "difficulty": "very_easy",
+   "extension": null,
+   "marketing": "In this stage, you'll extend your TCP server to respond to a HTTP request with a 200 response.",
+   "description": "In this stage, your server will respond to an HTTP request with a `200` response.\n\n### HTTP response\n\nAn HTTP response is made up of three parts, each separated by a [CRLF](https://developer.mozilla.org/en-US/docs/Glossary/CRLF) (`\\r\\n`):\n1.  Status line.\n2.  Zero or more headers, each ending with a CRLF.\n3.  Optional response body.\n\nIn this stage, your server's response will only contain a status line. Here's the response your server must send:\n```javascript\nHTTP/1.1 200 OK\\r\\n\\r\\n\n```\n\nHere's a breakdown of the response:\n```javascript\n// Status line\nHTTP/1.1  // HTTP version\n200       // Status code\nOK        // Optional reason phrase\n\\r\\n      // CRLF that marks the end of the status line\n\n// Headers (empty)\n\\r\\n      // CRLF that marks the end of the headers\n\n// Response body (empty)\n```\n\nFor more information about HTTP responses, see the [MDN Web Docs on HTTP responses](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) or the [HTTP/1.1 specification](https://datatracker.ietf.org/doc/html/rfc9112#name-message).\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will then send an HTTP `GET` request to your server:\n```bash\n$ curl -v http://localhost:4221\n```\n\nYour server must respond to the request with the following response:\n```javascript\nHTTP/1.1 200 OK\\r\\n\\r\\n\n```\n\n### Notes\n\n- You can ignore the contents of the request. We'll cover parsing requests in later stages.\n- This challenge uses HTTP/1.1.\n- To learn how HTTP works, you'll implement your server from scratch using TCP primitives, without relying on built-in or external HTTP libraries.\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "ih0",
+   "name": "Extract URL path",
+   "difficulty": "easy",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for returning a 404 response if a path isn't valid.",
+   "description": "In this stage, your server will extract the URL path from an HTTP request, and respond with either a `200` or `404`, depending on the path.\n\n### HTTP request\n\nAn HTTP request is made up of three parts, each separated by a [CRLF](https://developer.mozilla.org/en-US/docs/Glossary/CRLF) (`\\r\\n`):\n\n1.  Request line.\n2.  Zero or more headers, each ending with a CRLF.\n3.  Optional request body.\n\nHere's an example of an HTTP request:\n```javascript\nGET /index.html HTTP/1.1\\r\\nHost: localhost:4221\\r\\nUser-Agent: curl/7.64.1\\r\\nAccept: */*\\r\\n\\r\\n\n```\n\nHere's a breakdown of the request:\n```javascript\n// Request line\nGET                          // HTTP method\n/index.html                  // Request target\nHTTP/1.1                     // HTTP version\n\\r\\n                         // CRLF that marks the end of the request line\n\n// Headers\nHost: localhost:4221\\r\\n     // Header that specifies the server's host and port\nUser-Agent: curl/7.64.1\\r\\n  // Header that describes the client's user agent\nAccept: */*\\r\\n              // Header that specifies which media types the client can accept\n\\r\\n                         // CRLF that marks the end of the headers\n\n// Request body (empty)\n```\n\nThe \"request target\" specifies the URL path for this request. In this example, the URL path is `/index.html`.\n\nNote that each header ends in a CRLF, and the entire header section also ends in a CRLF.\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will then send two HTTP requests to your server.\n\nFirst, the tester will send a `GET` request, with a random string as the path:\n```bash\n$ curl -v http://localhost:4221/abcdefg\n```\n\nYour server must respond to this request with a `404` response:\n```javascript\nHTTP/1.1 404 Not Found\\r\\n\\r\\n\n```\n\nThen, the tester will send a `GET` request, with the path `/`:\n```bash\n$ curl -v http://localhost:4221\n```\n\nYour server must respond to this request with a `200` response:\n```javascript\nHTTP/1.1 200 OK\\r\\n\\r\\n\n```\n\n### Notes\n\n- You can ignore the headers for now. You'll learn about parsing headers in a later stage.\n- In this stage, the request target is written as a URL path. But the request target actually has [four possible formats](https://datatracker.ietf.org/doc/html/rfc9112#section-3.2). The URL path format is called the \"origin form,\" and it's the most commonly used format. The other formats are used for more niche scenarios, like sending a request through a proxy.\n- For more information about HTTP requests, see the [MDN Web Docs on HTTP requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) or the [HTTP/1.1 specification](https://datatracker.ietf.org/doc/html/rfc9112#name-message).\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "cn2",
+   "name": "Respond with body",
+   "difficulty": "easy",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for responding with a custom body in your HTTP response.",
+   "description": "In this stage, you'll implement the `/echo/{str}` endpoint, which accepts a string and returns it in the response body.\n\n### Response body\n\nA response body is used to return content to the client. This content may be an entire web page, a file, a string, or anything else that can be represented with bytes.\n\nYour `/echo/{str}` endpoint must return a `200` response, with the response body set to given string, and with a `Content-Type` and `Content-Length` header.\n\nHere's an example of an `/echo/{str}` request:\n```javascript\nGET /echo/abc HTTP/1.1\\r\\nHost: localhost:4221\\r\\nUser-Agent: curl/7.64.1\\r\\nAccept: */*\\r\\n\\r\\n\n```\n\nAnd here's the expected response:\n```javascript\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: 3\\r\\n\\r\\nabc\n```\n\nHere's a breakdown of the response:\n```javascript\n// Status line\nHTTP/1.1 200 OK\n\\r\\n                          // CRLF that marks the end of the status line\n\n// Headers\nContent-Type: text/plain\\r\\n  // Header that specifies the format of the response body\nContent-Length: 3\\r\\n         // Header that specifies the size of the response body, in bytes\n\\r\\n                          // CRLF that marks the end of the headers\n\n// Response body\nabc                           // The string from the request\n```\n\nThe two headers are required for the client to be able to parse the response body. Note that each header ends in a CRLF, and the entire header section also ends in a CRLF.\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will then send a `GET` request to the `/echo/{str}` endpoint on your server, with some random string.\n```bash\n$ curl -v http://localhost:4221/echo/abc\n```\n\nYour server must respond with a `200` response that contains the following parts:\n- `Content-Type` header set to `text/plain`.\n- `Content-Length` header set to the length of the given string.\n- Response body set to the given string.\n```javascript\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: 3\\r\\n\\r\\nabc\n```\n\n### Notes\n- For more information about HTTP responses, see the [MDN Web Docs on HTTP responses](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) or the [HTTP/1.1 specification](https://datatracker.ietf.org/doc/html/rfc9112#name-message).\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "fs3",
+   "name": "Read header",
+   "difficulty": "easy",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for parsing HTTP request headers.",
+   "description": "In this stage, you'll implement the `/user-agent` endpoint, which reads the `User-Agent` request header and returns it in the response body.\n\n### The `User-Agent` header\n\nThe [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) header describes the client's user agent.\n\nYour `/user-agent` endpoint must read the `User-Agent` header, and return it in your response body. Here's an example of a `/user-agent` request:\n```javascript\n// Request line\nGET\n/user-agent\nHTTP/1.1\n\\r\\n\n\n// Headers\nHost: localhost:4221\\r\\n\nUser-Agent: foobar/1.2.3\\r\\n  // Read this value\nAccept: */*\\r\\n\n\\r\\n\n\n// Request body (empty)\n```\n\nHere is the expected response:\n```javascript\n// Status line\nHTTP/1.1 200 OK               // Status code must be 200\n\\r\\n\n\n// Headers\nContent-Type: text/plain\\r\\n\nContent-Length: 12\\r\\n\n\\r\\n\n\n// Response body\nfoobar/1.2.3                  // The value of `User-Agent`\n```\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will then send a `GET` request to the `/user-agent` endpoint on your server. The request will have a `User-Agent` header.\n```bash\n$ curl -v --header \"User-Agent: foobar/1.2.3\" http://localhost:4221/user-agent\n```\n\nYour server must respond with a `200` response that contains the following parts:\n- `Content-Type` header set to `text/plain`.\n- `Content-Length` header set to the length of the `User-Agent` value.\n- Message body set to the `User-Agent` value.\n```javascript\nHTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: 12\\r\\n\\r\\nfoobar/1.2.3\n```\n\n### Notes\n- Header names are [case-insensitive](https://datatracker.ietf.org/doc/html/rfc9112#name-field-syntax).\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "ej5",
+   "name": "Concurrent connections",
+   "difficulty": "easy",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for handling multiple concurrent connections.",
+   "description": "In this stage, you'll add support for concurrent connections.\n\n{{#lang_is_javascript}}\nIn most languages, you'd need to either use threads or implement an\n[Event Loop](https://en.wikipedia.org/wiki/Event_loop) to do this. In JavaScript however, since [the concurrency\nmodel itself is based on an event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop), most\nstandard library functions are designed to support this kind of concurrent behaviour out of the box. **It is very\nlikely that the code you had for the previous stage will pass this stage without any changes!**\n{{/lang_is_javascript}}\n\n{{#lang_is_typescript}}\nIn most languages, you'd need to either use threads or implement an\n[Event Loop](https://en.wikipedia.org/wiki/Event_loop) to do this. In TypeScript however, since [the concurrency\nmodel itself is based on an event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop), most\nstandard library functions are designed to support this kind of concurrent behaviour out of the box. **It is very\nlikely that the code you had for the previous stage will pass this stage without any changes!**\n{{/lang_is_typescript}}\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThen, the tester will create multiple concurrent TCP connections to your server. (The exact number of connections is determined at random.) After that, the tester will send a single `GET` request through each of the connections.\n```bash\n$ (sleep 3 && printf \"GET / HTTP/1.1\\r\\n\\r\\n\") | nc localhost 4221 &\n$ (sleep 3 && printf \"GET / HTTP/1.1\\r\\n\\r\\n\") | nc localhost 4221 &\n$ (sleep 3 && printf \"GET / HTTP/1.1\\r\\n\\r\\n\") | nc localhost 4221 &\n```\n\nYour server must respond to each request with the following response:\n```javascript\nHTTP/1.1 200 OK\\r\\n\\r\\n\n```\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "ap6",
+   "name": "Return a file",
+   "difficulty": "medium",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for serving the contents of a file.",
+   "description": "In this stage, you'll implement the `/files/{filename}` endpoint, which returns a requested file to the client.\n\n### Tests\n\nThe tester will execute your program with a `--directory` flag. Your program should read this flag from the command-line arguments, and treat the specified directory as the root directory for all file requests.\n\n```\n$ ./your_program.sh --directory /tmp/\n```\n\nThe tester will then send two `GET` requests to the `/files/{filename}` endpoint. Each request corresponds to the file path `{directory}/{filename}`.\n\nYour response should depend on whether the file at `{directory}/{filename}` exists or not.\n\n#### First request\nThe first request will ask for a file that exists in the files directory:\n```\n$ echo -n 'Hello, World!' > /tmp/foo\n$ curl -i http://localhost:4221/files/foo\n```\n\nYour server must respond with a `200` response that contains the following parts:\n- `Content-Type` header set to `application/octet-stream`.\n- `Content-Length` header set to the size of the file, in bytes.\n- Response body set to the file contents.\n```\nHTTP/1.1 200 OK\\r\\nContent-Type: application/octet-stream\\r\\nContent-Length: 13\\r\\n\\r\\nHello, World!\n```\n\n#### Second request\nThe second request will ask for a file that doesn't exist in the files directory:\n```\n$ curl -i http://localhost:4221/files/non_existant_file\n```\n\nYour server must respond with a `404` response:\n```\nHTTP/1.1 404 Not Found\\r\\n\\r\\n\n```\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "qv8",
+   "name": "Read request body",
+   "difficulty": "medium",
+   "extension": null,
+   "marketing": "In this stage, you'll add support for receiving POST requests.",
+   "description": "In this stage, you'll add support for the `POST` method of the `/files/{filename}` endpoint, which accepts text from the client and creates a new file with that text.\n\n### Request body\n\nA request body is used to send data from the client to the server.\n\nHere's an example of a `POST /files/{filename}` request:\n```\n// Request line\nPOST /files/number HTTP/1.1\n\\r\\n\n\n// Headers\nHost: localhost:4221\\r\\n\nUser-Agent: curl/7.64.1\\r\\n\nAccept: */*\\r\\n\nContent-Type: application/octet-stream  // Header that specifies the format of the request body\nContent-Length: 5\\r\\n                   // Header that specifies the size of the request body, in bytes\n\\r\\n\n\n// Request Body\n12345\n```\n\n### Tests\n\nThe tester will execute your program with a `--directory` flag. The `--directory` flag specifies the directory to create the file in, as an absolute path.\n```\n$ ./your_program.sh --directory /tmp/\n```\n\nThe tester will then send a `POST` request to the `/files/{filename}` endpoint on your server, with the following parts:\n- `Content-Type` header set to `application/octet-stream`.\n- `Content-Length` header set to the size of the request body, in bytes.\n- Request body set to some random text.\n\n```\n$ curl -v --data \"12345\" -H \"Content-Type: application/octet-stream\" http://localhost:4221/files/file_123\n```\n\nYour server must return a `201` response:\n```\nHTTP/1.1 201 Created\\r\\n\\r\\n\n```\n\nYour server must also create a new file in the files directory, with the following requirements:\n- The filename must equal the `filename` parameter in the endpoint.\n- The file must contain the contents of the request body.\n\n{{#reader_is_bot}}\nDo not use the HTTP server utilities available in the standard library. Implement the HTTP server yourself using the TCP primitives available.\n{{/reader_is_bot}}"
+  },
+  {
+   "slug": "df4",
+   "name": "Compression headers",
+   "difficulty": "easy",
+   "extension": "http-compression",
+   "marketing": "In this stage, you'll add support for reading the `Accept-Encoding` header sent by clients, and respond with `Content-Encoding` header in your response.",
+   "description": "Welcome to the HTTP Compression extension! In this extension, you'll add support for [compression](https://en.wikipedia.org/wiki/HTTP_compression) to your HTTP server.\n\nIn this stage, you'll add support for the `Accept-Encoding` and `Content-Encoding` headers.\n\n### `Accept-Encoding` and `Content-Encoding`\n\nAn HTTP client uses the `Accept-Encoding` header to specify the compression schemes it supports. In the following example, the client specifies that it supports the `gzip` compression scheme:\n```\n> GET /echo/foo HTTP/1.1\n> Host: localhost:4221\n> User-Agent: curl/7.81.0\n> Accept: */*\n> Accept-Encoding: gzip  // Client specifies it supports the gzip compression scheme.\n```\n\nThe server then chooses one of the compression schemes listed in `Accept-Encoding` and compresses the response body with it.\n\nThen, the server sends a response with the compressed body and a `Content-Encoding` header. `Content-Encoding` specifies the compression scheme that was used.\n\nIn the following example, the response body is compressed with `gzip`:\n```\n< HTTP/1.1 200 OK\n< Content-Encoding: gzip    // Server specifies that the response body is compressed with gzip.\n< Content-Type: text/plain  // Original media type of the body.\n< Content-Length: 23        // Size of the compressed body.\n< ...                       // Compressed body.\n```\n\nIf the server doesn't support any of the compression schemes specified by the client, then it will not compress the response body. Instead, it will send a standard response and omit the `Content-Encoding` header.\n\nFor this extension, assume that your server only supports the `gzip` compression scheme.\n\nFor this stage, you don't need to compress the body. You'll implement compression in a later stage.\n\n### Tests\n\nThe tester will execute your program like this:\n```\n$ ./your_program.sh\n```\n\nThe tester will then send two `GET` requests to the `/echo/{str}` endpoint on your server.\n\n#### First request\n\nFirst, the tester will send a request with this header: `Accept-Encoding: gzip`.\n```\n$ curl -v -H \"Accept-Encoding: gzip\" http://localhost:4221/echo/abc\n```\n\nYour server's response must contain this header: `Content-Encoding: gzip`.\n```\nHTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Encoding: gzip\n\n...  // Body omitted.\n```\n\n#### Second request\n\nNext, the tester will send a request with this header: `Accept-Encoding: invalid-encoding`.\n```\n$ curl -v -H \"Accept-Encoding: invalid-encoding\" http://localhost:4221/echo/abc\n```\n\nYour server's response must not contain a `Content-Encoding` header:\n```\nHTTP/1.1 200 OK\nContent-Type: text/plain\n\n...  // Body omitted.\n```\n\n### Notes\n\n- You'll add support for `Accept-Encoding` headers with multiple compression schemes in a later stage.\n- There's another method for HTTP compression that uses the `TE` and `Transfer-Encoding` headers. We won't cover that method in this extension."
+  },
+  {
+   "slug": "ij8",
+   "name": "Multiple compression schemes",
+   "difficulty": "medium",
+   "extension": "http-compression",
+   "marketing": "In this stage, you'll add support for reading multiple compression values from `Accept-Encoding` header sent by clients, and respond with `Content-Encoding` header in your response.",
+   "description": "In this stage, you'll add support for `Accept-Encoding` headers that contain multiple compression schemes.\n\n### Multiple compression schemes\n\nA client can specify that it supports multiple compression schemes by setting `Accept-Encoding` to a comma-separated list:\n```\nAccept-Encoding: encoding-1, encoding-2, encoding-3\n```\n\nFor this extension, assume that your server only supports the `gzip` compression scheme.\n\nFor this stage, you don't need to compress the body. You'll implement compression in a later stage.\n\n### Tests\n\nThe tester will execute your program like this:\n```\n$ ./your_program.sh\n```\n\nThe tester will then send two `GET` requests to the `/echo/{str}` endpoint on your server.\n\n#### First request\n\nFor the first request, the `Accept-Encoding` header will contain `gzip`, along with some invalid encodings:\n```\n$ curl -v -H \"Accept-Encoding: invalid-encoding-1, gzip, invalid-encoding-2\" http://localhost:4221/echo/abc\n```\n\nYour server's response must contain this header: `Content-Encoding: gzip`.\n```javascript\nHTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Encoding: gzip\n\n// Body omitted.\n```\n\n#### Second request\n\nFor the second request, the `Accept-Encoding` header will only contain invalid encodings:\n```\n$ curl -v -H \"Accept-Encoding: invalid-encoding-1, invalid-encoding-2\" http://localhost:4221/echo/abc\n```\n\nYour server's response must not contain a `Content-Encoding` header:\n```javascript\nHTTP/1.1 200 OK\nContent-Type: text/plain\n\n// Body omitted.\n```"
+  },
+  {
+   "slug": "cr8",
+   "name": "Gzip compression",
+   "difficulty": "medium",
+   "extension": "http-compression",
+   "marketing": "In this stage, you'll add support for encoding the response body using `gzip`.",
+   "description": "In this stage, you'll add support for [`gzip` compression](https://www.gzip.org/) to your HTTP server.\n\n### Tests\n\nThe tester will execute your program like this:\n```\n$ ./your_program.sh\n```\n\nThen, the tester will send a `GET` request to the `/echo/{str}` endpoint on your server. The request will contain an `Accept-Encoding` header that includes `gzip`.\n```\n$ curl -v -H \"Accept-Encoding: gzip\" http://localhost:4221/echo/abc | hexdump -C\n```\n\nYour server's response must contain the following:\n- `200` response code.\n- `Content-Type` header set to `text/plain`.\n- `Content-Encoding` header set to `gzip`.\n- `Content-Length` header set to the size of the compressed body.\n- Response body set to the `gzip`-compressed `str` parameter.\n\n```\nHTTP/1.1 200 OK\nContent-Encoding: gzip\nContent-Type: text/plain\nContent-Length: 23\n\n1F 8B 08 00 00 00 00 00  // This is the hexadecimal representation of the body.\n00 03 4B 4C 4A 06 00 C2  // It should actually be sent as binary data.\n41 24 35 03 00 00 00\n```\n\n### Notes\n\n- To check that your compressed body is correct, you can run `echo -n <uncompressed-str> | gzip | hexdump -C`.\n- It's normal for a very short string like `abc` to increase in size when compressed."
+  },
+  {
+   "slug": "ag9",
+   "name": "Persistent connections",
+   "difficulty": "medium",
+   "extension": "http-persistent-connections",
+   "marketing": "In this stage, you'll add support for persistent HTTP connections, allowing multiple requests to be handled over the same TCP connection.",
+   "description": "In this stage, you'll add support for persistent HTTP connections. By default, HTTP/1.1 connections are persistent, meaning the same TCP connection can be reused for multiple requests.\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will then send two sequential requests over the same connection:\n```bash\n$ curl --http1.1 -v http://localhost:4221/echo/banana --next http://localhost:4221/user-agent -H \"User-Agent: blueberry/apple-blueberry\"\n```\n\nYour server must:\n1. Keep the TCP connection open after the first request\n2. Handle any subsequent requests on the same connection\n3. Return appropriate responses for both requests\n\n### Notes\n- In HTTP/1.1, connections are persistent by default unless the client sends a `Connection: close` header\n- Each request must be processed independently, even if they're on the same connection\n- The server should not close the connection after each request"
+  },
+  {
+   "slug": "ul1",
+   "name": "Concurrent persistent connections",
+   "difficulty": "medium",
+   "extension": "http-persistent-connections",
+   "marketing": "In this stage, you'll add support for handling multiple concurrent persistent connections.",
+   "description": "In this stage, you'll extend your server to handle multiple concurrent persistent connections.\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will create two persistent connections and send multiple requests on each:\n```bash\n$ curl --http1.1 -v http://localhost:4221/user-agent -H \"User-Agent: orange/mango-grape\" --next http://localhost:4221/echo/apple\n```\n\nYour server must:\n1. Handle multiple concurrent TCP connections\n2. Keep each connection open for multiple requests\n3. Process requests independently on each connection\n4. Return appropriate responses for all requests\n\n### Notes\n- Each connection should be handled independently\n- The server should maintain the state of each connection separately\n- Requests on different connections can be processed concurrently"
+  },
+  {
+   "slug": "kh7",
+   "name": "Connection closure",
+   "difficulty": "medium",
+   "extension": "http-persistent-connections",
+   "marketing": "In this stage, you'll add support for explicit connection closure using the Connection header.",
+   "description": "In this stage, you'll add support for explicit connection closure using the `Connection: close` header.\n\n### Tests\n\nThe tester will execute your program like this:\n```bash\n$ ./your_program.sh\n```\n\nThe tester will send two requests:\n1. A regular request that should keep the connection open\n2. A request with `Connection: close` header that should close the connection\n\n```bash\n$ curl --http1.1 -v http://localhost:4221/echo/orange --next http://localhost:4221/ -H \"Connection: close\"\n```\n\nYour server must:\n1. Keep the connection open after the first request\n2. Close the connection after the second request when `Connection: close` is present\n3. Include the `Connection: close` header in the response when closing the connection\n\n### Notes\n- The `Connection: close` header indicates that the connection should be closed after the response\n- The server should include the same header in its response\n- After sending the response with `Connection: close`, the server should close the TCP connection"
+  }
+ ]
+}

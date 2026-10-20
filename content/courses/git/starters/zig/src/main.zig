@@ -1,0 +1,36 @@
+const std = @import("std");
+const stdout = std.Io.File.stdout();
+
+pub fn main(init: std.process.Init) !void {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const args = try init.minimal.args.toSlice(allocator);
+    defer allocator.free(args);
+
+    if (args.len < 2) {
+        std.debug.print("Usage: {s} <command>\n", .{args[0]});
+        return;
+    }
+
+    const command: []const u8 = args[1];
+
+    // You can use print statements as follows for debugging, they'll be visible when running tests.
+    std.debug.print("Logs from your program will appear here!\n", .{});
+
+    if (std.mem.eql(u8, command, "init")) {
+        // TODO: Uncomment the code below to pass the first stage
+        // const io = init.io;
+        // const cwd = std.Io.Dir.cwd();
+        // _ = try cwd.createDir(io, "./.git", .default_dir);
+        // _ = try cwd.createDir(io, "./.git/objects", .default_dir);
+        // _ = try cwd.createDir(io, "./.git/refs", .default_dir);
+        // {
+        //     const head = try cwd.createFile(io, "./.git/HEAD", .{});
+        //     defer head.close(io);
+        //     _ = try head.writeStreamingAll(io, "ref: refs/heads/main\n");
+        // }
+        // try stdout.writeStreamingAll(io, "Initialized git directory\n");
+    }
+}

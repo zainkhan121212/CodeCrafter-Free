@@ -1,0 +1,8 @@
+# Database files used for testing
+*.db
+
+*.beam
+*.ez
+/build
+erl_crash.dump
+main

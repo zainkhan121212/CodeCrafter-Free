@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeCrafter Free</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor" opacity=".14"/><path d="M11 10l-5 6 5 6M21 10l5 6-5 6M18 8l-4 16" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>CodeCrafter <b>Free</b></span>
+    </a>
+    <nav>
+      <a href="#/" data-nav="catalog">Courses</a>
+      <a href="#/runs" data-nav="runs">Test runs</a>
+      <a href="#/help" data-nav="help">How it works</a>
+    </nav>
+    <span id="live-dot" class="live-dot" title="Waiting for test runs from your terminal"><i></i><span>Listening</span></span>
+  </header>
+  <main id="view" tabindex="-1"></main>
+  <section id="drawer" class="drawer" hidden aria-label="Live test run">
+    <div class="drawer-head">
+      <span id="drawer-status" class="status running">Running</span>
+      <span id="drawer-title"></span>
+      <span class="spacer"></span>
+      <button id="drawer-toggle" class="ghost" aria-label="Collapse">▾</button>
+      <button id="drawer-close" class="ghost" aria-label="Close">✕</button>
+    </div>
+    <pre id="drawer-log" class="log"></pre>
+  </section>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+name: codecrafters-http-server
+version: 0.1.0.0
+license: BSD3
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
+
+dependencies:
+  - base >= 4.19 && < 5
+  - network # establish a simple TCP network
+  - bytestring # useful to send bytes over the network
+
+executables:
+  codecrafters-http-server-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N

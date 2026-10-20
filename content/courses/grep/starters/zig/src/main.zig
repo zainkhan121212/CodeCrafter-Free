@@ -1,0 +1,35 @@
+const std = @import("std");
+
+fn matchPattern(input_line: []const u8, pattern: []const u8) bool {
+    if (pattern.len == 1) {
+        return std.mem.indexOf(u8, input_line, pattern) != null;
+    } else {
+        @panic("Unhandled pattern");
+    }
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
+
+    if (args.len < 3 or !std.mem.eql(u8, args[1], "-E")) {
+        std.debug.print("Expected first argument to be '-E'\n", .{});
+        std.process.exit(1);
+    }
+
+    // You can use print statements as follows for debugging, they'll be visible when running tests.
+    try std.Io.File.stderr().writeStreamingAll(io, "Logs from your program will appear here!\n");
+
+    // TODO: Uncomment the code below to pass the first stage
+    //
+    // var stdin_buffer: [4096]u8 = undefined;
+    // var stdin_reader = std.Io.File.stdin().readerStreaming(io, &stdin_buffer);
+    // const input_slice = try stdin_reader.interface.takeDelimiter('\n');
+    //
+    // const pattern = args[2];
+    // if (matchPattern(input_slice.?, pattern)) {
+    //     std.process.exit(0);
+    // } else {
+    //     std.process.exit(1);
+    // }
+}

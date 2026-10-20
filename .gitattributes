@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.sh text eol=lf
+*.db binary
+*.torrent binary
+*.png binary
+*.jpg binary
+*.jar binary

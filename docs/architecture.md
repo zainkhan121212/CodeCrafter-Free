@@ -1,37 +1,49 @@
-# Architecture and release boundaries
+# Architecture
 
-## Components
+CodeCrafter Free is local-first: the learner's code, the testers and all progress live on the learner's machine.
+There is no server-side execution and no account system.
 
-`lib/catalog.mjs` is browser-compatible curriculum data: stable challenge/stage IDs, requirements, examples, hints and references. `lib/cases.mjs` holds executable cases, including generated SQLite and compressed Git fixtures.
+```
+ VS Code terminal                         Dashboard (browser or Electron window)
+ ┌──────────────────────┐                 ┌───────────────────────────────┐
+ │ ccfree test          │                 │ app/app.js                    │
+ │  ├─ build (once)     │                 │  ├─ catalog / course / stage  │
+ │  ├─ testers/<course> │ ── TCP/UDP/ ──▶ │  └─ live log drawer (SSE)     │
+ │  │    └─ your program│    files/args   └──────────────▲────────────────┘
+ │  └─ ~/.ccfree/runs/  │                                │ GET /api/live
+ └──────────┬───────────┘                 ┌──────────────┴────────────────┐
+            └──── append events ────────▶ │ server.mjs (loopback, read-only)
+                  progress.json           │ tails ~/.ccfree/runs/*.jsonl  │
+                                          └───────────────────────────────┘
+```
 
-`bin/ccfree.mjs` creates starters and invokes `lib/runner.mjs`. The runner spawns an explicit executable without a shell, serializes input, bounds runtime and captured output, parses output as JSON and performs structural equality comparisons. One OS process is started per check. Each stage aggregates actual check results. Unknown challenge/stage IDs fail rather than yielding an empty pass.
+## Pieces
 
-`server.mjs` is a loopback-only, read-only dashboard server. Fixed asset routes prevent arbitrary file serving. Host and Origin checks constrain browser access. It never accepts submission commands. CLI reports are individual UUID-named files to avoid concurrent writers overwriting a shared report database.
+- **Content** (`content/courses/<slug>/course.json`, `starters/`): imported from the MIT-licensed CodeCrafters course
+  repositories by `scripts/import-upstream.mjs`. Stages are ordered base-first, then by extension.
+- **CLI** (`bin/ccfree.mjs`): `init` copies a starter and writes `ccfree.json` and VS Code tasks; `test` picks stages,
+  runs them, records the run and advances progress.
+- **Runner** (`lib/harness/runner.mjs`): builds once, then runs each stage's tester in order and stops at the first
+  failure. A missing tester is reported as `missing`, never as a pass. Each stage has a timeout and a cleanup list
+  (processes, temp dirs, sockets).
+- **Process launcher** (`lib/harness/process.mjs`): starts programs without a shell, resolves Windows `.cmd` shims and
+  Git Bash, streams output line-by-line into the log, and kills whole process trees (`taskkill /T` on Windows, process
+  groups elsewhere).
+- **Testers** (`testers/<course>/index.mjs`): export `stages: { [slug]: async t => … }`. They use protocol helpers in
+  `lib/protocols/` and network helpers in `lib/harness/net.mjs`.
+- **Store** (`lib/store.mjs`): `~/.ccfree/progress.json` keyed by project directory, plus one `.events.jsonl` and one
+  summary `.json` per run.
+- **Dashboard** (`server.mjs`, `app/`): a read-only HTTP server bound to 127.0.0.1 that serves the UI, the catalog and
+  progress, and streams run events with Server-Sent Events. It rejects non-loopback `Host` headers and non-GET requests.
+- **Desktop** (`desktop/`): an Electron window around the same server.
 
-The browser uses `lib/reports.mjs` validation, escaped text rendering, latest-report-per-stage progress, and local storage. Import supports one runner report or a progress-export array. The static build has the same UI but no report API. Hosted usage is explicit manual import.
+## Verification
 
-## Testing model
+`npm test` runs platform tests (catalog, CLI, RESP, dashboard boundaries) and, for every course with a reference solution
+in `solutions/`, runs all of its testers twice: against the reference (must pass) and against a program that exits
+immediately (must fail).
 
-Foundation stages use deterministic JSON adapters. This removes language-specific process arguments from beginner lessons and keeps tests free of external services. It also limits fidelity: a parser that passes HTTP component tests is not a validated HTTP server.
+## Security model
 
-The current test suite validates fixture expectations using reference implementations, then separately runs those implementations through the process runner. Negative tests cover wrong answers, invalid JSON, exit failure, missing executable, timeouts, output caps and unknown IDs. HTTP checks use an actual loopback listener.
-
-This release is tested with Node.js on Windows. Python starters are generated but a Python runtime was unavailable in this environment. Other languages require installed runtimes and their own JSON adapters.
-
-## What a hosted judge would require
-
-1. Account and repository identity with per-user authorization.
-2. A submission API that enqueues immutable source snapshots, never executing inside the web service.
-3. Dedicated isolated workers with no host credentials, denied external network by default, read-only base images, process/file/memory/CPU limits and complete process-tree cleanup.
-4. A versioned language-image matrix and challenge-specific protocol harnesses.
-5. Durable report storage, queue observability, cancellation and retention policies.
-6. A Git receiver or GitHub integration with verified event signatures.
-7. Abuse controls and a funded compute/storage budget.
-
-Do not deploy the local CLI behind a public HTTP route. The current timeout/output bounds are not a sandbox.
-
-## Curriculum expansion
-
-Each challenge should add real protocol adapters before claiming full-system coverage: TCP/RESP for Redis, TCP HTTP request lifecycles, UDP DNS resolution, Kafka wire-level interoperability, SQLite file/query fixtures, Git filesystem/plumbing behavior, actual shell process execution, peer exchange, and real model adapters for the AI agent.
-
-Keep stage IDs stable, version changing contracts, test failures as well as successes, and explicitly disclose unsupported behaviors. The public product comparison and broader backlog are in `research.md`.
+The tester runs code the learner wrote, with the learner's permissions — the same trust model as running your own
+program. The dashboard never executes anything and is not reachable from other machines.

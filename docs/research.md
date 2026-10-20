@@ -1,5 +1,13 @@
 # Research: REA and CodeCrafters
 
+> **Update (v1.0):** The most important finding came after this document was first written: CodeCrafters publishes its
+> course definitions, stage descriptions and starter repositories as open source under the MIT License
+> (`github.com/codecrafters-io/build-your-own-<course>`). CodeCrafter Free now imports that content directly (see
+> `content/UPSTREAM.md`) instead of reconstructing it, which gives exact stage-list parity. The official testers are
+> Go binaries published for Linux and macOS only, so CodeCrafter Free ships its own cross-platform testers. REA was used as
+> a methodology reference (evidence, explicit unknowns, verification), not as a code dependency. Sections below that
+> describe the earlier JSON-driver prototype are historical.
+
 Reviewed 2026-10-20. This is a bounded source and public-product investigation, not a claim that every line of REA or every authenticated CodeCrafters feature was audited. Nothing in REA was installed or executed. No CodeCrafters source bundle, paid curriculum, hidden tests, credentials, or private backend was obtained.
 
 ## Evidence vocabulary
