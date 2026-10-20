@@ -178,13 +178,13 @@ export const stages = {
     const input = `I have ${num()} cats`;
     const inputFile = join(await t.tmpDir(), 'input.txt');
     await writeFile(inputFile, input);
-    const command = ptyCommand([...t.project.run, '--color=auto', '-E', 'cats'], { stdinFile: inputFile });
+    const command = ptyCommand([...t.programCommand, '--color=auto', '-E', 'cats'], { stdinFile: inputFile });
     if (!command) {
       t.log.info('Skipping the TTY part of this test: pseudo-terminals are not available on this platform (use WSL to run it).');
       return;
     }
     t.log.info(`$ echo -n ${shellQuote(input)} | ./your_program.sh --color=auto -E 'cats'   # stdout is a terminal`);
-    const proc = new Proc(command, [], { cwd: t.project.dir, logger: t.log });
+    const proc = new Proc(command, [], { cwd: t.project.dir, env: t.programEnv, logger: t.log });
     proc.closeStdin();
     const code = await proc.waitForExit(10000);
     if (code === null) { await proc.kill(); throw new TestFailure('Program did not exit'); }

@@ -77,7 +77,8 @@ export const stages = {
       if (!existsSync(join(dir, p)) || !statSync(join(dir, p)).isDirectory()) throw new TestFailure(`Expected ${p} to be a directory`);
       t.log.success(`✓ ${p} directory exists`);
     }
-    const head = await readFile(join(dir, '.git', 'HEAD'), 'utf8').catch(() => null);
+    // Git itself ignores trailing whitespace in HEAD, so a Windows \r\n line ending is fine.
+    const head = (await readFile(join(dir, '.git', 'HEAD'), 'utf8').catch(() => null))?.replace(/\s*$/, '\n') ?? null;
     if (head === null) throw new TestFailure('Expected .git/HEAD to be a file');
     if (!['ref: refs/heads/main\n', 'ref: refs/heads/master\n'].includes(head)) throw new TestFailure(`Expected .git/HEAD to contain "ref: refs/heads/main\\n" or "ref: refs/heads/master\\n", got ${JSON.stringify(head)}`);
     t.log.success('✓ .git/HEAD is valid');
