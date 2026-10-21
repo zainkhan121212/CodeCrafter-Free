@@ -1,5 +1,6 @@
 import { marked } from '/vendor/marked.esm.js';
-import { renderTemplate, orderedStages, currentStage, languageName } from '/render.mjs';
+import { renderTemplate, orderedStages, currentStage, languageName, latestStageRun } from '/render.mjs';
+import { mountAnswerPanel } from '/answers.js';
 
 marked.setOptions({ gfm: true, breaks: false });
 
@@ -44,13 +45,15 @@ function copyBlock(lines) {
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-copy]');
   if (!btn) return;
-  navigator.clipboard?.writeText(btn.dataset.copy).then(() => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1200); });
+  if (!navigator.clipboard) { btn.textContent = 'Select text to copy'; return; }
+  navigator.clipboard.writeText(btn.dataset.copy).then(() => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1200); }).catch(() => { btn.textContent = 'Select text to copy'; });
 });
 
 // ---------- views ----------
 
-async function catalogView() {
+async function catalogView(version) {
   state.courses ??= await api('/api/courses');
+  if (version !== routeVersion) return;
   const totalStages = state.courses.reduce((n, c) => n + c.stageCount, 0);
   const cards = state.courses.map(c => {
     const p = activeProject(c.slug);
@@ -59,7 +62,7 @@ async function catalogView() {
       <h3><span class="glyph">${esc(GLYPHS[c.slug] || c.name[0])}</span>${esc(c.name)}</h3>
       <p>${esc(c.shortDescription)}</p>
       ${done ? `<div class="progress" title="${done}/${c.stageCount}"><i style="width:${(done / c.stageCount) * 100}%"></i></div>` : ''}
-      <div class="meta"><span>${c.stageCount} stages</span>${c.extensions.length ? `<span>${c.extensions.length} extensions</span>` : ''}<span>${c.languages.length} languages</span>
+      <div class="meta"><span>${c.stageCount} stages</span>${c.extensions.length ? `<span>${c.extensions.length} extensions</span>` : ''}<span>Python</span>
       ${done ? `<span style="color:var(--accent)">${done} done${p.language ? ` · ${esc(languageName(p.language))}` : ''}</span>` : ''}</div>
     </a>`;
   }).join('');
@@ -68,9 +71,9 @@ async function catalogView() {
       <div>
         <h1>Build <em>Redis</em>, <em>Git</em>, <em>SQLite</em> and more — from scratch. Free.</h1>
         <p>Real systems-programming challenges, tested on your own machine. Write code in VS Code, run <code>ccfree test</code> in the terminal, and watch the results appear here live. No account, no subscription, no limits.</p>
-        <div class="pills"><span class="pill">${state.courses.length} courses</span><span class="pill">${totalStages} stages</span><span class="pill">20+ languages</span><span class="pill">Progress saved locally</span></div>
+        <div class="pills"><span class="pill">${state.courses.length} courses</span><span class="pill">${totalStages} stages</span><span class="pill">Python</span><span class="pill">Progress saved locally</span></div>
       </div>
-      <pre class="terminal"><span class="p">$ </span><span class="c">ccfree init redis my-redis --language python</span>
+      <pre class="terminal"><span class="p">$ </span><span class="c">ccfree init redis my-redis</span>
 <span class="p">$ </span><span class="c">cd my-redis &amp;&amp; code .</span>
 <span class="p">$ </span><span class="c">ccfree test</span>
 <span class="dim">[tester::#JM1] Running tests for Stage #1: jm1 (Bind to a port)</span>
@@ -82,12 +85,13 @@ async function catalogView() {
     <div class="grid">${cards}</div>`;
 }
 
-async function courseView(slug) {
+async function courseView(slug, version) {
   const course = await getCourse(slug);
+  if (version !== routeVersion) return;
   const project = activeProject(slug);
   const completed = project?.completed || {};
   const current = currentStage(course, completed);
-  const language = state.prefs.language && course.languages.includes(state.prefs.language) ? state.prefs.language : project?.language || (course.languages.includes('python') ? 'python' : course.languages[0]);
+  const language = 'python';
   const tested = new Set(course.tested);
   const stages = orderedStages(course);
   const groups = [{ slug: null, name: 'Base stages' }, ...course.extensions];
@@ -114,10 +118,8 @@ async function courseView(slug) {
       <aside>
         <div class="panel">
           <h3>${project ? 'Continue' : 'Start this course'}</h3>
-          <label class="field">Language
-            <select id="lang">${course.languages.map(l => `<option value="${l}" ${l === language ? 'selected' : ''}>${esc(languageName(l))}</option>`).join('')}</select>
-          </label>
-          ${copyBlock([`ccfree init ${slug} ${dir} --language ${language}`, `cd ${dir}`, 'code .', 'ccfree test'])}
+          <p class="field">Python</p>
+          ${copyBlock([`ccfree init ${slug} ${dir}`, `cd ${dir}`, 'code .', 'ccfree test'])}
           ${current ? `<p style="margin:14px 0 0"><a class="btn primary" href="#/course/${slug}/${current.slug}">${project ? 'Continue' : 'Read'} stage #${stages.indexOf(current) + 1}: ${esc(current.name)} →</a></p>` : '<p>🎉 All stages complete!</p>'}
         </div>
         ${projects.length ? `<div class="panel"><h3>Your projects</h3><div class="projects">${projects.map(p => {
@@ -129,18 +131,18 @@ async function courseView(slug) {
       </aside>
     </section>
     <div class="stage-groups">${groupHtml}</div>`;
-  $('#lang').addEventListener('change', e => { state.prefs.language = e.target.value; savePrefs(); courseView(slug); });
 }
 
-async function stageView(slug, stageSlug) {
+async function stageView(slug, stageSlug, version) {
   const course = await getCourse(slug);
+  if (version !== routeVersion) return;
   const project = activeProject(slug);
   const completed = project?.completed || {};
   const stages = orderedStages(course);
   const stage = stages.find(s => s.slug === stageSlug);
   if (!stage) return notFound();
   const i = stages.indexOf(stage);
-  const language = project?.language || state.prefs.language || null;
+  const language = 'python';
   const ext = course.extensions.find(e => e.slug === stage.extension);
   const tested = course.tested.includes(stage.slug);
   let lastGroup;
@@ -150,6 +152,8 @@ async function stageView(slug, stageSlug) {
     return `${head}<a href="#/course/${slug}/${s.slug}" class="${s === stage ? 'active' : ''} ${completed[s.slug] ? 'done' : ''}"><span class="n">${completed[s.slug] ? '✓' : `#${n + 1}`}</span><span>${esc(s.name)}</span></a>`;
   }).join('');
   const prev = stages[i - 1], next = stages[i + 1];
+  const previousAnswer = $('#stage-answer');
+  const reuseAnswer = previousAnswer?.dataset.answerKey === `${slug}/${stage.slug}/${language || ''}`;
   view.innerHTML = `
     <div class="crumbs"><a href="#/">Courses</a> / <a href="#/course/${slug}">${esc(course.name)}</a> / Stage #${i + 1}</div>
     <div class="stage-layout">
@@ -159,6 +163,7 @@ async function stageView(slug, stageSlug) {
         <div class="stage-meta"><span class="diff ${stage.difficulty}">${esc(stage.difficulty.replace('_', ' '))}</span>${ext ? `<span class="pill">${esc(ext.name)}</span>` : ''}<span class="pill">${esc(stage.slug)}</span>
           ${completed[stage.slug] ? '<span class="status passed">Completed</span>' : ''}${tested ? '' : '<span class="soon">Tester coming soon — you can read ahead</span>'}</div>
         <div class="prose">${md(stage.description, language)}</div>
+        <section class="panel answer-panel" id="stage-answer" aria-label="Stage solution"></section>
         <div class="panel" style="margin-top:28px">
           <h3>Test your code</h3>
           <p style="margin:0 0 12px;color:var(--muted);font-size:14px">Run this in your project's terminal (VS Code: <kbd>Ctrl</kbd>+<kbd>\`</kbd>). Results stream into this page.</p>
@@ -168,20 +173,27 @@ async function stageView(slug, stageSlug) {
         <div class="stage-foot">${prev ? `<a class="btn" href="#/course/${slug}/${prev.slug}">← ${esc(prev.name)}</a>` : '<span></span>'}${next ? `<a class="btn" href="#/course/${slug}/${next.slug}">${esc(next.name)} →</a>` : ''}</div>
       </article>
     </div>`;
+  if (reuseAnswer) $('#stage-answer').replaceWith(previousAnswer);
+  else mountAnswerPanel($('#stage-answer'), { course: slug, stage: stage.slug, language });
+  const runContainer = $('#stage-run');
   document.querySelector('.stage-nav a.active')?.scrollIntoView({ block: 'center' });
   const runs = await api('/api/runs');
-  const last = runs.find(r => r.course === slug && r.stages?.includes(stage.slug));
+  const last = latestStageRun(runs, slug, stage.slug, project?.dir);
   if (last) {
     const events = await api(`/api/runs/${last.id}/events`);
+    if (!runContainer.isConnected) return;
     $('#stage-run').innerHTML = `<div class="row" style="margin-bottom:8px;font-size:13px"><span>Last run · ${new Date(last.startedAt).toLocaleString()}</span><span class="status ${last.status}">${esc(last.status)}</span></div><pre class="log" style="max-height:320px;border-radius:10px">${events.filter(e => e.type === 'log').map(logLine).join('')}</pre>`;
   }
 }
 
-async function runsView(id) {
+async function runsView(id, version) {
   const runs = await api('/api/runs');
+  if (version !== routeVersion) return;
   if (id) {
     const run = runs.find(r => r.id === id);
     const events = await api(`/api/runs/${id}/events`).catch(() => []);
+    if (version !== routeVersion) return;
+    if (!run) return notFound();
     view.innerHTML = `<div class="crumbs"><a href="#/runs">Test runs</a> / ${esc(id)}</div>
       <div class="section-title"><h2>${esc(run ? `${run.course} · ${languageName(run.language)}` : 'Run')}</h2>${run ? `<span class="status ${run.status}">${esc(run.status)}</span>` : ''}</div>
       <pre class="log" style="border-radius:12px;min-height:300px">${events.filter(e => e.type === 'log').map(logLine).join('')}</pre>`;
@@ -189,7 +201,7 @@ async function runsView(id) {
   }
   view.innerHTML = `<div class="section-title"><h2>Test runs</h2><span>Every <code>ccfree test</code> you run shows up here</span></div>
     ${runs.length ? `<table class="runs"><thead><tr><th>When</th><th>Course</th><th>Language</th><th>Stages</th><th>Result</th></tr></thead><tbody>
-    ${runs.map(r => `<tr class="clickable" data-run="${esc(r.id)}"><td>${new Date(r.startedAt).toLocaleString()}</td><td>${esc(r.course)}</td><td>${esc(languageName(r.language))}</td>
+    ${runs.map(r => `<tr class="clickable" data-run="${esc(r.id)}"><td>${new Date(r.startedAt).toLocaleString()}</td><td><a href="#/runs/${encodeURIComponent(r.id)}">${esc(r.course)}</a></td><td>${esc(languageName(r.language))}</td>
       <td>${esc((r.stages || []).length === 1 ? r.stages[0] : `${(r.stages || []).length} stages`)}</td><td><span class="status ${r.status}">${esc(r.status)}</span></td></tr>`).join('')}
     </tbody></table>` : '<div class="empty">No test runs yet. Create a project with <code>ccfree init</code> and run <code>ccfree test</code>.</div>'}`;
   view.querySelectorAll('[data-run]').forEach(tr => tr.addEventListener('click', () => { location.hash = `#/runs/${tr.dataset.run}`; }));
@@ -199,8 +211,8 @@ function helpView() {
   view.innerHTML = `<div class="section-title"><h2>How CodeCrafter Free works</h2></div>
   <div class="course-head"><div class="prose">
     <ol class="steps">
-      <li><b>Pick a course and language.</b> Each course is split into small stages, from "bind to a port" to replication, transactions and more.</li>
-      <li><b>Create a project.</b> <code>ccfree init &lt;course&gt; &lt;dir&gt; --language &lt;lang&gt;</code> copies a starter repository and writes <code>ccfree.json</code>, which says how to build and run your program.</li>
+      <li><b>Pick a course.</b> Each course is split into small stages, from "bind to a port" to replication, transactions and more.</li>
+      <li><b>Create a project.</b> <code>ccfree init &lt;course&gt; &lt;dir&gt;</code> copies a starter repository and writes <code>ccfree.json</code>, which says how to build and run your program.</li>
       <li><b>Write code in VS Code.</b> Read the stage instructions here or with <code>ccfree show</code>.</li>
       <li><b>Test from the terminal.</b> <code>ccfree test</code> starts your program and talks to it the way a real client would (TCP, UDP, files, CLI arguments). Logs stream to your terminal and to this dashboard.</li>
       <li><b>Advance.</b> When a stage passes, you move on automatically. Use <code>ccfree test --previous</code> to make sure older stages still pass.</li>
@@ -208,18 +220,18 @@ function helpView() {
     <h3>Commands</h3>
     <table><tbody>
       <tr><td><code>ccfree courses</code></td><td>List courses and progress</td></tr>
-      <tr><td><code>ccfree init &lt;course&gt; [dir] --language &lt;lang&gt;</code></td><td>Create a project</td></tr>
+      <tr><td><code>ccfree init &lt;course&gt; [dir]</code></td><td>Create a project</td></tr>
       <tr><td><code>ccfree test</code></td><td>Test the current stage</td></tr>
       <tr><td><code>ccfree test --previous</code></td><td>Test all stages up to the current one</td></tr>
       <tr><td><code>ccfree test --stage &lt;slug&gt;</code></td><td>Test one stage</td></tr>
       <tr><td><code>ccfree show</code> / <code>ccfree status</code> / <code>ccfree stages</code></td><td>Read instructions and progress in the terminal</td></tr>
       <tr><td><code>ccfree app</code></td><td>Open this dashboard</td></tr>
-      <tr><td><code>ccfree doctor</code></td><td>Check installed language runtimes</td></tr>
+      <tr><td><code>ccfree doctor</code></td><td>Check installed runtimes</td></tr>
     </tbody></table>
     <h3>Privacy</h3>
     <p>Everything stays on your computer${state.progress ? ` in <code>${esc(state.progress.home)}</code>` : ''}. There are no accounts, no telemetry and no remote execution.</p>
   </div>
-  <aside><div class="panel"><h3>Languages need their own runtime</h3><p style="color:var(--muted);font-size:14px;margin:0">JavaScript, TypeScript and Python run directly. Compiled languages (Go, Rust, C, C++, Java, …) use the starter's <code>.ccfree/compile.sh</code> and <code>.ccfree/run.sh</code>, which need <code>bash</code> (on Windows: Git Bash or WSL). Run <code>ccfree doctor</code> to see what is installed.</p></div></aside></div>`;
+  <aside><div class="panel"><h3>Python setup</h3><p>Install Python 3.10 or newer and Node.js 22.13 or newer. Write your solution in <code>app/main.py</code>, then run <code>ccfree test</code>. Run <code>ccfree doctor</code> to check your setup.</p></div></aside></div>`;
 }
 
 function notFound() {
@@ -272,18 +284,22 @@ function connectLive() {
 
 // ---------- router ----------
 
+let routeVersion = 0;
 async function route() {
+  const version = ++routeVersion;
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === (parts[0] === 'runs' ? 'runs' : parts[0] === 'help' ? 'help' : 'catalog')));
   try {
     if (!state.progress) await refreshProgress();
-    if (!parts.length) await catalogView();
-    else if (parts[0] === 'course' && parts[2]) await stageView(parts[1], parts[2]);
-    else if (parts[0] === 'course') await courseView(parts[1]);
-    else if (parts[0] === 'runs') await runsView(parts[1]);
+    if (version !== routeVersion) return;
+    if (!parts.length) await catalogView(version);
+    else if (parts[0] === 'course' && parts[2]) await stageView(parts[1], parts[2], version);
+    else if (parts[0] === 'course') await courseView(parts[1], version);
+    else if (parts[0] === 'runs') await runsView(parts[1], version);
     else if (parts[0] === 'help') helpView();
     else notFound();
   } catch (err) {
+    if (version !== routeVersion) return;
     view.innerHTML = `<div class="empty">Something went wrong: ${esc(err.message)}</div>`;
   }
 }

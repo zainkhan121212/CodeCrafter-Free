@@ -52,12 +52,14 @@ test('cli: init creates a runnable project with config, VS Code tasks and README
   const parent = await mkdtemp(join(tmpdir(), 'ccfree-init-'));
   try {
     const env = { ...process.env, CCFREE_HOME: home };
-    cli(['init', 'redis', 'proj', '--language', 'javascript'], { cwd: parent, env });
+    cli(['init', 'redis', 'proj'], { cwd: parent, env });
     const dir = join(parent, 'proj');
     const config = JSON.parse(await readFile(join(dir, 'ccfree.json'), 'utf8'));
     assert.equal(config.course, 'redis');
-    assert.deepEqual(config.run, ['node', 'app/main.js']);
-    assert.ok(existsSync(join(dir, 'app', 'main.js')));
+    assert.equal(config.language, 'python');
+    assert.ok(config.run.includes('app.main'));
+    assert.ok(existsSync(join(dir, 'app', 'main.py')));
+    assert.throws(() => cli(['init', 'redis', 'other', '--language', 'javascript'], { cwd: parent, env, stdio: 'pipe' }), /New projects use Python/);
     assert.ok(JSON.parse(await readFile(join(dir, '.vscode', 'tasks.json'), 'utf8')).tasks.length >= 2);
     assert.match(cli(['status'], { cwd: dir, env }), /0\/124 stages complete/);
     assert.match(cli(['show'], { cwd: dir, env }), /Bind to a port/);

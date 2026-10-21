@@ -9,7 +9,7 @@ dashboard.
 
 - **No account, no subscription, no limits.** Progress is saved on your computer.
 - **11 courses, 412 stages**, with the same stage lists as the CodeCrafters catalog (see [content/UPSTREAM.md](content/UPSTREAM.md)).
-- **20+ languages.** Every course comes with starter code for Python, JavaScript, TypeScript, Go, Rust, C, C++, Java, C#, … .
+- **Python.** New learner projects, instructions and example answers use Python.
 - **Works on Windows, macOS and Linux.** The testers are written from scratch in Node.js and run natively on Windows (see platform notes).
 
 | Course | Stages | You build |
@@ -27,6 +27,17 @@ dashboard.
 | Claude Code | 13 | An AI coding agent: tool calls, agent loop, skills |
 
 ## How the tests work
+
+### Viewing example answers
+
+Open a stage and select **Show answer** under **Python solution**. **Hide answer** collapses it.
+Answers show a stage-specific diff for `app/main.py`: green `+` lines are additions and red `-` lines are removals, with a short explanation. Apply the changes to your existing file; do not paste diff markers into Python.
+
+Each example builds on the previous example (linked in the panel), beginning with the shipped Python starter. If your implementation differs, adapt the changes.
+
+**Current answer coverage: the seven Redis base stages**, from binding a port through SET/GET expiry. Each example is checked against its own and all preceding base-stage testers. Other stages explicitly say that their Python answer has not been written yet; their instructions and testers remain available. Complete JavaScript references remain internal tester fixtures and are never served as learner answers.
+
+### Tester coverage
 
 **Every one of the 412 stages has a tester.** Everything runs locally and offline:
 
@@ -54,12 +65,10 @@ programs in the official *Crafting Interpreters* test suite.
   pseudo-terminal (TAB completion, arrow keys). Run those in WSL ("WSL: Reopen Folder in WSL" in VS Code, install Node
   there) — the tester tells you when that's needed. The `--color=auto` grep stage checks its terminal half on Linux/macOS only.
 - **Linux/macOS:** everything runs. The pseudo-terminal uses `python3`, which is preinstalled on most systems.
-- Compiled languages (Go, Rust, C, C++, Java, …) build through the starter's `.ccfree/*.sh` scripts, which need `sh`
-  (on Windows: Git Bash, installed with Git).
 
 ## Install
 
-You need [Node.js](https://nodejs.org) 22.13 or newer and [Git](https://git-scm.com).
+You need Python 3.10 or newer, [Node.js](https://nodejs.org) 22.13 or newer and [Git](https://git-scm.com).
 
 ```sh
 git clone https://github.com/zainkhan121212/CodeCrafter-Free.git
@@ -80,7 +89,7 @@ npm run desktop     # or: open it as a desktop app (downloads Electron the first
 ## Your first stage
 
 ```sh
-ccfree init redis my-redis --language python
+ccfree init redis my-redis
 cd my-redis
 code .              # open in VS Code
 ccfree show         # read the stage instructions
@@ -95,7 +104,7 @@ When a stage passes, ccfree moves you to the next one. In VS Code you can also r
 | Command | What it does |
 | --- | --- |
 | `ccfree courses` | List courses and your progress |
-| `ccfree init <course> [dir] --language <lang>` | Create a project from a starter |
+| `ccfree init <course> [dir]` | Create a project from a starter |
 | `ccfree test` | Test the current stage; advance when it passes |
 | `ccfree test --previous` | Re-test every stage up to the current one |
 | `ccfree test --stage <slug>` | Test one specific stage (any order) |
@@ -125,9 +134,7 @@ Add `--debug` to `ccfree test` for extra tester output.
 - `run` is started for every test instance, with stage-specific arguments appended.
 - Optional `"extensions": ["lists", "streams"]` limits and orders which extensions you work through.
 
-JavaScript, TypeScript and Python run directly. Compiled languages use the starter's `.ccfree/compile.sh` and
-`.ccfree/run.sh`, which need `sh`/`bash` — on Windows that means Git Bash (installed with Git) or WSL. You can always edit
-`ccfree.json` to use any command you like.
+Python runs directly through the interpreter configured in `ccfree.json`. Existing project configurations remain runnable.
 
 ## Where data is stored
 

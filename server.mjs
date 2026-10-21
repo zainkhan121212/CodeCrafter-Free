@@ -6,10 +6,12 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { root, listCourses, getCourse } from './lib/content.mjs';
 import { readProgress, listRuns, readRunEvents, runsDir, home } from './lib/store.mjs';
+import { getAnswer } from './lib/answers.mjs';
 
 const ASSETS = {
   '/': ['app/index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app/app.js', 'text/javascript; charset=utf-8'],
+  '/answers.js': ['app/answers.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['app/style.css', 'text/css; charset=utf-8'],
   '/render.mjs': ['lib/render.mjs', 'text/javascript; charset=utf-8'],
   '/vendor/marked.esm.js': ['app/vendor/marked.esm.js', 'text/javascript; charset=utf-8'],
@@ -99,6 +101,11 @@ export function createServer() {
           extensions: c.extensions.map(e => ({ slug: e.slug, name: e.name, count: c.stages.filter(s => s.extension === e.slug).length })),
         })));
         return send(200, courses);
+      }
+      const answerMatch = path.match(/^\/api\/courses\/([\w-]+)\/stages\/([\w-]+)\/answer$/);
+      if (answerMatch) {
+        const answer = await getAnswer(answerMatch[1], answerMatch[2]);
+        return answer ? send(200, answer) : send(404, { error: 'Unknown course or stage' });
       }
       const courseMatch = path.match(/^\/api\/courses\/([\w-]+)$/);
       if (courseMatch) {

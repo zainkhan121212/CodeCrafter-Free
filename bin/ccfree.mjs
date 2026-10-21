@@ -105,6 +105,7 @@ Data is stored locally in ${home()}`);
     if (!slug) die('Usage: ccfree init <course> [directory] [--language <language>]');
     const course = requireCourse(slug);
     const language = flags.language || 'python';
+    if (language !== 'python') die('New projects use Python. Run ccfree init without --language to create a Python starter.');
     if (!starterDir(course.slug, language)) die(`No ${language} starter for ${course.name}. Available: ${starterLanguages(course.slug).join(', ')}`);
     const dir = resolve(dirArg || `ccfree-${course.slug}-${language}`);
     if (existsSync(dir) && (await readdir(dir)).length) die(`${dir} already exists and is not empty. Choose another directory.`);
@@ -171,6 +172,7 @@ First stage: **${first.name}**.
     if (flags.stage) {
       const stage = findStage(course, flags.stage);
       if (!stage) die(`Unknown stage "${flags.stage}" for ${course.name}. Run \`ccfree stages\` to list them.`);
+      if (flags.previous && !order.includes(stage)) die(`Stage "${flags.stage}" is in a disabled extension. Enable that extension in ccfree.json or test it without --previous.`);
       stages = flags.previous ? order.slice(0, order.indexOf(stage) + 1) : [stage];
     } else {
       const current = currentStage(course, cprog.completed, project.extensions);
@@ -235,7 +237,7 @@ First stage: **${first.name}**.
     const ext = course.extensions.find(e => e.slug === stage.extension);
     console.log(bold(`Stage #${order.indexOf(stage) + 1}: ${stage.name}`) + dim(`  [${stage.slug}] ${ext ? `${ext.name} · ` : ''}${stage.difficulty}`));
     console.log('');
-    console.log(terminalMarkdown(renderTemplate(stage.description, { language: project?.language })));
+    console.log(terminalMarkdown(renderTemplate(stage.description, { language: 'python' })));
   },
 
   async stages() {
@@ -263,8 +265,8 @@ First stage: **${first.name}**.
   },
 
   async doctor() {
-    const checks = [['node', '--version'], ['python', '--version'], ['python3', '--version'], ['uv', '--version'], ['go', 'version'], ['cargo', '--version'],
-      ['gcc', '--version'], ['java', '--version'], ['dotnet', '--version'], ['bun', '--version'], ['bash', '--version'], ['git', '--version']];
+    const checks = [['node', '--version'], ['python', '--version'], ['python3', '--version'],
+      ['uv', '--version'], ['bash', '--version'], ['git', '--version']];
     for (const [cmd, arg] of checks) {
       const r = spawnSync(cmd, [arg], { encoding: 'utf8', windowsHide: true, shell: process.platform === 'win32' });
       const ok = r.status === 0 && !/not found|Microsoft Store/i.test(r.stdout + r.stderr);
